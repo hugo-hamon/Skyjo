@@ -1,0 +1,12 @@
+[project]
+name = "skyjo"
+version = "0.1.0"
+description = "Skyjo environment for reinforcement learning algorithms"
+license = {text = "MIT License"}
+readme = "README.md"
+requires-python = ">=3.12.10"
+dependencies = [
+    "numpy>=2.3.0",
+    "pytest>=8.4.0",
+    "pytest-cov>=6.2.1",
+]
