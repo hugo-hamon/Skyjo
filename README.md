@@ -17,8 +17,8 @@ Skyjo/
 │   └── skyjo_env.py # Environnement principal
 ├── test/
 │   └── test_env.py # Tests pour l'environnement
-└── exemple/
-    └── exemple.py # Exemple d'utilisation de l'environnement
+└── example/
+    └── example.py # Example d'utilisation de l'environnement
 ```
 
 ## Installation
@@ -34,5 +34,5 @@ uv run pytest # pour vérifier que tout fonctionne
 ## Exemple d'utilisation
 
 ```bash
-uv run exemple/exemple.py
+uv run example/example.py
 ```
