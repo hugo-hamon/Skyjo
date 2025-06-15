@@ -33,7 +33,8 @@ def test_env_reset():
         assert len(player["grid"]) == 12
         assert len(player["visible"]) == 12
         assert player["return_count"] == 2
-        assert player["score"] == 0
+        visible_cards = [card for card, visible in zip(player["grid"], player["visible"]) if visible]
+        assert player["score"] == sum(visible_cards)
         assert sum(player["visible"]) == 2
 
     assert len(env.discard_pile) == 1
@@ -277,3 +278,29 @@ def test_final_round_trigger_and_game_end():
     env.step({"flip": flip_idx})
 
     assert env.done
+
+def test_score_calculation_in_step():
+    env = SkyjoEnv(num_players=2)
+    env.reset()
+    
+    # Test score when replacing a card
+    initial_score = env.players[0]["score"]
+    env.step({"draw": "deck"})
+    replace_index = next(i for i, v in enumerate(env.players[0]["grid"]) if v is not None)
+    old_card_value = env.players[0]["grid"][replace_index]
+    new_card_value = env.pending_card
+    
+    env.step({"replace": replace_index})
+    expected_score = initial_score - old_card_value + new_card_value
+    assert env.players[0]["score"] == expected_score
+    
+    # Test score when flipping a card
+    env.reset()
+    env.step({"draw": "deck"})
+    flip_index = next(i for i, v in enumerate(env.players[0]["visible"]) if not v)
+    flipped_card_value = env.players[0]["grid"][flip_index]
+    initial_score = env.players[0]["score"]
+    
+    env.step({"flip": flip_index})
+    expected_score = initial_score + flipped_card_value
+    assert env.players[0]["score"] == expected_score

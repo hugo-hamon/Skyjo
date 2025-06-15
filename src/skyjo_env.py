@@ -64,14 +64,17 @@ class SkyjoEnv:
             visible = [False] * CARD_COUNT
             # Make 2 cards visible randomly
             indices = random.sample(range(CARD_COUNT), 2)
+            current_score = 0
             for i in indices:
                 visible[i] = True
+                current_score += grid[i]
+            
             self.players.append(
                 {
                     "grid": grid,
                     "visible": visible,
                     "return_count": 2,
-                    "score": 0,
+                    "score": current_score,
                 }
             )
 
@@ -155,6 +158,8 @@ class SkyjoEnv:
                     f"Invalid replace: position {replace_index} is already removed."
                 )
             self.discard_pile.append(player["grid"][replace_index])
+            player["score"] -= player["grid"][replace_index]
+            player["score"] += self.pending_card
             if not player["visible"][replace_index]:
                 player["return_count"] += 1
             player["grid"][replace_index] = self.pending_card
@@ -166,6 +171,7 @@ class SkyjoEnv:
                 raise ValueError(f"Cannot flip index {flip_index}: already removed.")
             if player["visible"][flip_index]:
                 raise ValueError(f"Cannot flip index {flip_index}: already visible.")
+            player["score"] += player["grid"][flip_index]
             player["visible"][flip_index] = True
             player["return_count"] += 1
             self.discard_pile.append(self.pending_card)
