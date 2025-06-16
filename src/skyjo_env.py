@@ -41,6 +41,7 @@ class SkyjoEnv:
         self.remaining_final_turns = None
 
         self.pending_card = None
+        self.previous_action = ""
 
     def reset(self) -> dict:
         """
@@ -103,6 +104,7 @@ class SkyjoEnv:
             "deck_count": len(self.deck),
             "current_player": self.current_player,
             "pending_card": self.pending_card,
+            "previous_action": self.previous_action,
         }
 
     def step(self, action: dict) -> tuple[dict, float, bool, dict]:

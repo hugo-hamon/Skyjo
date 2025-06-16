@@ -2,9 +2,9 @@ import sys
 import os
 
 # Add src/ to the path to import the skyjo_env.py file
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from skyjo_env import SkyjoEnv
+from src.skyjo_env import SkyjoEnv
 import random
 
 env = SkyjoEnv(num_players=4)
@@ -41,7 +41,7 @@ while not done:
     # Simple strategy
     # If the drawn card is weak (<= 3), replace a random visible card
     # Otherwise, flip a random hidden card
-    if pending <= 3 and visible:
+    if pending <= 3 and visible or obs["previous_action"] == "draw_discard":
         replace_index = random.choice(visible)
         obs, _, done, _ = env.step({"replace": replace_index})
     elif hidden:
