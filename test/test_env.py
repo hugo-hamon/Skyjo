@@ -331,3 +331,55 @@ def test_previous_action_logic():
     assert env.previous_action == "draw_deck"
     env.step({"flip": next(i for i, v in enumerate(env.players[0]["visible"]) if not v)})
     assert env.previous_action == ""
+
+def test_get_final_scores():
+    env = SkyjoEnv(num_players=2)
+    env.reset()
+    
+    # Test that we can't get final scores before game is done
+    with pytest.raises(ValueError, match="Cannot calculate final scores before the game is done"):
+        env.get_final_scores()
+    
+    # Test normal scoring (no penalty)
+    # Set up a game state where player 0 ends with lowest score
+    env.players[0]["grid"] = [1, 2, 3, None, None, None, None, None, None, None, None, None]  # Score: 6
+    env.players[1]["grid"] = [4, 5, 6, None, None, None, None, None, None, None, None, None]  # Score: 15
+    env.final_player = 0
+    env.done = True
+    
+    final_scores = env.get_final_scores()
+    assert final_scores[0] == 6  # No penalty as player 0 has lowest score
+    assert final_scores[1] == 15
+    
+    # Test penalty scoring (positive score)
+    # Set up a game state where player 0 ends with higher score
+    env.players[0]["grid"] = [4, 5, 6, None, None, None, None, None, None, None, None, None]  # Score: 15
+    env.players[1]["grid"] = [1, 2, 3, None, None, None, None, None, None, None, None, None]  # Score: 6
+    env.final_player = 0
+    env.done = True
+    
+    final_scores = env.get_final_scores()
+    assert final_scores[0] == 30  # Score doubled as player 0 has higher score
+    assert final_scores[1] == 6
+    
+    # Test penalty scoring (negative score)
+    # Set up a game state where player 0 ends with higher negative score
+    env.players[0]["grid"] = [-4, -5, -6, None, None, None, None, None, None, None, None, None]  # Score: -15
+    env.players[1]["grid"] = [-1, -2, -3, None, None, None, None, None, None, None, None, None]  # Score: -6
+    env.final_player = 0
+    env.done = True
+    
+    final_scores = env.get_final_scores()
+    assert final_scores[0] == -15  # Score not doubled as it's negative
+    assert final_scores[1] == -6
+
+    # Test with multiple players having the same lowest score
+    # Set up a game state where players 0 and 1 have the same lowest score
+    env.players[0]["grid"] = [1, 2, 3, None, None, None, None, None, None, None, None, None]  # Score: 6
+    env.players[1]["grid"] = [1, 2, 3, None, None, None, None, None, None, None, None, None]  # Score: 6
+    env.final_player = 0
+    env.done = True
+    
+    final_scores = env.get_final_scores()
+    assert final_scores[0] == 12  # penalty as player 0 and 1 have the same score
+    assert final_scores[1] == 6
