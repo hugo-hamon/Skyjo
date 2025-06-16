@@ -68,7 +68,7 @@ class SkyjoEnv:
             for i in indices:
                 visible[i] = True
                 current_score += grid[i]
-            
+
             self.players.append(
                 {
                     "grid": grid,
@@ -83,6 +83,7 @@ class SkyjoEnv:
         self.done = False
         self.final_player = None
         self.pending_card = None
+        self.previous_action = ""
         return self._get_obs()
 
     def _get_obs(self) -> dict:
@@ -120,6 +121,11 @@ class SkyjoEnv:
         Returns:
             tuple: (observation, reward, done, info)
         """
+        if "flip" in action and self.previous_action == "draw_discard":
+            raise ValueError(
+                "You cannot flip a card after drawing from the discard pile. You must replace."
+            )
+
         player = self.players[self.current_player]
 
         # PHASE 1: Drawing the card
@@ -133,8 +139,10 @@ class SkyjoEnv:
                 raise ValueError("You must use the previously drawn card first.")
             if action["draw"] == "deck":
                 self.pending_card = self.deck.pop()
+                self.previous_action = "draw_deck"
             elif action["draw"] == "discard":
                 self.pending_card = self.discard_pile.pop()
+                self.previous_action = "draw_discard"
             else:
                 raise ValueError("Invalid draw source.")
             return self._get_obs(), 0.0, self.done, {}
@@ -194,6 +202,9 @@ class SkyjoEnv:
             if self.remaining_final_turns == 0:
                 self.done = True
 
+        # Remove last action
+        self.previous_action = ""
+
         return self._get_obs(), 0.0, self.done, {}
 
     def _check_and_remove_columns(self, player: dict) -> None:
@@ -216,7 +227,7 @@ class SkyjoEnv:
                     self.discard_pile.append(player["grid"][idx])
                     player["grid"][idx] = None  # plus de carte
                     player["visible"][idx] = False
-    
+
     def render(self):
         """
         Displays the current state of the game in a human-readable format.
@@ -236,4 +247,3 @@ class SkyjoEnv:
             )
         print(f"À jouer: Joueur {self.current_player}")
         print()
-

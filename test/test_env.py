@@ -304,3 +304,30 @@ def test_score_calculation_in_step():
     env.step({"flip": flip_index})
     expected_score = initial_score + flipped_card_value
     assert env.players[0]["score"] == expected_score
+
+def test_previous_action_logic():
+    env = SkyjoEnv(num_players=2)
+    env.reset()
+    
+    # Test draw from deck
+    env.step({"draw": "deck"})
+    assert env.previous_action == "draw_deck"
+    
+    # Test draw from discard
+    env.step({"flip": next(i for i, v in enumerate(env.players[0]["visible"]) if not v)})
+    env.step({"draw": "discard"})
+    assert env.previous_action == "draw_discard"
+    
+    # Test error when trying to flip after drawing from discard
+    with pytest.raises(ValueError, match="You cannot flip a card after drawing from the discard pile"):
+        env.step({"flip": next(i for i, v in enumerate(env.players[0]["visible"]) if not v)})
+    
+    # Test that previous_action is reset after completing a turn
+    env.step({"replace": next(i for i, v in enumerate(env.players[0]["grid"]) if v is not None)})
+    assert env.previous_action == ""
+    
+    # Test that previous_action is properly set and reset in a complete turn
+    env.step({"draw": "deck"})
+    assert env.previous_action == "draw_deck"
+    env.step({"flip": next(i for i, v in enumerate(env.players[0]["visible"]) if not v)})
+    assert env.previous_action == ""
