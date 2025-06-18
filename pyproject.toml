@@ -6,6 +6,7 @@ license = {text = "MIT License"}
 readme = "README.md"
 requires-python = ">=3.12.10"
 dependencies = [
+    "alive-progress>=3.2.0",
     "numpy>=2.3.0",
     "pytest>=8.4.0",
     "pytest-cov>=6.2.1",

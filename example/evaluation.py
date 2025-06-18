@@ -2,10 +2,9 @@ import sys
 import os
 
 # Add src/ to the path to import the skyjo_env.py file
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from src.evaluation.elo_based import EloBasedEvaluator
-from src.evaluation.win_based import WinBasedEvaluator
+from src.evaluation.evaluator import Evaluator
 from src.models.base_model import SkyjoModel
 from typing import Any
 import random
@@ -38,7 +37,10 @@ class RandomModel(SkyjoModel):
             ]
 
             # Randomly choose between replace and flip
-            if random.random() < 0.5 or observation["previous_action"] == "draw_discard":
+            if (
+                random.random() < 0.5
+                or observation["previous_action"] == "draw_discard"
+            ):
                 # Replace a random card
                 return {"replace": random.choice(valid_positions)}
             else:
@@ -66,55 +68,26 @@ class RandomModel(SkyjoModel):
 
 
 def main():
-    num_games = 10000
+    num_games = 10_000
+    model_number = 5
 
     # Create some random models
-    model1 = RandomModel()
-    model2 = RandomModel()
-    model3 = RandomModel()
-    model4 = RandomModel()
+    models = [RandomModel() for _ in range(model_number)]
+    model_names = [f"Model {i + 1}" for i in range(model_number)]
 
-    # Evaluate using win-based system
-    print("=== Win-based Evaluation ===")
-    win_evaluator = WinBasedEvaluator(num_games=num_games)
+    # Evaluate
+    print("=== Evaluation ===")
+    evaluator = Evaluator(num_games=num_games, k_factor=16, initial_rating=1500, verbose=True)
 
-    # 1v1 evaluation
-    print("\n1v1 Evaluation:")
-    results_1v1 = win_evaluator.evaluate_1v1(model1, model2)
-    print(f"Model 1 win rate: {results_1v1['model1_win_rate']:.2%}")
-    print(f"Model 2 win rate: {results_1v1['model2_win_rate']:.2%}")
-
-    # 2v2 evaluation
-    print("\n2v2 Evaluation:")
-    results_2v2 = win_evaluator.evaluate_2v2(
-        [model1, model2],  # Team 1
-        [model3, model4],  # Team 2
+    evaluator.evaluate(
+        [(model, model_name) for model, model_name in zip(models, model_names)]
     )
-    print(f"Team 1 win rate: {results_2v2['team1_win_rate']:.2%}")
-    print(f"Team 2 win rate: {results_2v2['team2_win_rate']:.2%}")
 
-    # Evaluate using Elo-based system
-    print("\n=== Elo-based Evaluation ===")
-    elo_evaluator = EloBasedEvaluator(num_games=num_games)
+    for model_name, win_rate in evaluator.win_based_ratings.items():
+        print(f"{model_name} win rate: {win_rate / evaluator.total_games:.2%}")
 
-    # 1v1 evaluation
-    print("\n1v1 Evaluation:")
-    results_1v1_elo = elo_evaluator.evaluate_1v1(model1, model2)
-    print(f"Model 1 Elo rating: {results_1v1_elo['model1_rating']:.1f}")
-    print(f"Model 2 Elo rating: {results_1v1_elo['model2_rating']:.1f}")
-
-    # 2v2 evaluation
-    print("\n2v2 Evaluation:")
-    results_2v2_elo = elo_evaluator.evaluate_2v2(
-        [model1, model2],  # Team 1
-        [model3, model4],  # Team 2
-    )
-    print("Team 1:")
-    print(f"  Model 1 Elo rating: {results_2v2_elo['model1_rating']:.1f}")
-    print(f"  Model 2 Elo rating: {results_2v2_elo['model2_rating']:.1f}")
-    print("Team 2:")
-    print(f"  Model 3 Elo rating: {results_2v2_elo['model3_rating']:.1f}")
-    print(f"  Model 4 Elo rating: {results_2v2_elo['model4_rating']:.1f}")
+    for model_name, rating in evaluator.ratings.items():
+        print(f"{model_name} Elo rating: {rating:.1f}")
 
 
 if __name__ == "__main__":
