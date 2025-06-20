@@ -242,7 +242,10 @@ class SkyjoEnv:
                 v = "--" if val is None else (val if vis else "??")
                 line += f"{str(v).rjust(4)}"
             print(line)
-        print(f"Défausse: {self.discard_pile[-1]}")
+        if len(self.discard_pile) > 0:
+            print(f"Défausse: {self.discard_pile[-1]}")
+        else:
+            print("Défausse: vide")
         if self.final_player is not None:
             print(
                 f"Fin déclenchée par joueur {self.final_player} - {self.remaining_final_turns} tours restants"
