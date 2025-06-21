@@ -1,7 +1,12 @@
 import numpy as np
 import random
 
-CARD_COUNT = 12
+COLUMN_COUNT = 4
+ROW_COUNT = 3
+CARD_COUNT = COLUMN_COUNT * ROW_COUNT
+if CARD_COUNT <= 2:
+    raise ValueError("CARD_COUNT must be greater than 2 to play Skyjo.")
+
 CARD_DISTRIBUTION = {
     -2: 5,
     -1: 10,
@@ -47,7 +52,7 @@ class SkyjoEnv:
         """
         Resets the environment to the initial state:
         - Shuffles the deck
-        - Deals 12 cards to each player
+        - Deals CARD_COUNT cards to each player
         - Makes 2 cards visible for each player
         - Prepares the discard pile
 
@@ -118,7 +123,7 @@ class SkyjoEnv:
         Args:
             action (dict): Either:
                 - {"draw": "deck" or "discard"} to draw a card
-                - {"replace": int (0-11) or "flip": int (0-11)} to use the drawn card
+                - {"replace": int (0-CARD_COUNT) or "flip": int (0-CARD_COUNT)} to use the drawn card
 
         Returns:
             tuple: (observation, reward, done, info)
@@ -217,15 +222,15 @@ class SkyjoEnv:
         Args:
             player (dict): The player whose grid is checked and potentially modified.
         """
-        grid = np.array(player["grid"]).reshape(3, 4)
-        visible = np.array(player["visible"]).reshape(3, 4)
-        for col in range(4):
+        grid = np.array(player["grid"]).reshape(ROW_COUNT, COLUMN_COUNT)
+        visible = np.array(player["visible"]).reshape(ROW_COUNT, COLUMN_COUNT)
+        for col in range(COLUMN_COUNT):
             col_vals = grid[:, col]
             col_vis = visible[:, col]
             if all(col_vis) and len(set(col_vals)) == 1:
                 # On retire les cartes de cette colonne
-                for row in range(3):
-                    idx = row * 4 + col
+                for row in range(ROW_COUNT):
+                    idx = row * COLUMN_COUNT + col
                     self.discard_pile.append(player["grid"][idx])
                     player["grid"][idx] = None  # plus de carte
                     player["visible"][idx] = False
@@ -239,10 +244,10 @@ class SkyjoEnv:
         for i, p in enumerate(self.players):
             print(f"Joueur {i}:")
             # Display the grid in 3x4 format
-            for row in range(3):
+            for row in range(ROW_COUNT):
                 line = "  "  # Indent for the grid
-                for col in range(4):
-                    idx = row * 4 + col
+                for col in range(COLUMN_COUNT):
+                    idx = row * COLUMN_COUNT + col
                     val = p["grid"][idx]
                     vis = p["visible"][idx]
                     v = "--" if val is None else (val if vis else "??")
