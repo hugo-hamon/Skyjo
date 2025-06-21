@@ -7,14 +7,14 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.skyjo_env import SkyjoEnv
 import random
 
-env = SkyjoEnv(num_players=4)
+env = SkyjoEnv(num_players=2)
 
 
 obs = env.reset()
 done = False
 
 while not done:
-    env.render()
+    env.inline_render()
     player_id = obs["current_player"]
     player = obs["players"][player_id]
 

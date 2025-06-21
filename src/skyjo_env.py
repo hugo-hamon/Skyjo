@@ -233,6 +233,36 @@ class SkyjoEnv:
     def render(self):
         """
         Displays the current state of the game in a human-readable format.
+        Shows each player's grid in a 3x4 format, the top discard card, and whose turn it is.
+        """
+        print("=== SKYJO ===")
+        for i, p in enumerate(self.players):
+            print(f"Joueur {i}:")
+            # Display the grid in 3x4 format
+            for row in range(3):
+                line = "  "  # Indent for the grid
+                for col in range(4):
+                    idx = row * 4 + col
+                    val = p["grid"][idx]
+                    vis = p["visible"][idx]
+                    v = "--" if val is None else (val if vis else "??")
+                    line += f"{str(v).rjust(4)}"
+                print(line)
+            print()  # Empty line between players
+        if len(self.discard_pile) > 0:
+            print(f"Défausse: {self.discard_pile[-1]}")
+        else:
+            print("Défausse: vide")
+        if self.final_player is not None:
+            print(
+                f"Fin déclenchée par joueur {self.final_player} - {self.remaining_final_turns} tours restants"
+            )
+        print(f"À jouer: Joueur {self.current_player}")
+        print()
+
+    def inline_render(self):
+        """
+        Displays the current state of the game in a human-readable format.
         Shows each player's grid, the top discard card, and whose turn it is.
         """
         print("=== SKYJO ===")
@@ -256,7 +286,7 @@ class SkyjoEnv:
     def get_final_scores(self) -> dict[int, int]:
         """
         Calculate the final scores for each player when the game is done.
-        
+
         Rules:
         - For each player, the score is the sum of their remaining cards
         - If the player who ended the game doesn't have the lowest score:
@@ -264,22 +294,22 @@ class SkyjoEnv:
             - Their score remains unchanged if negative
         - If multiple players have the same lowest score, the player who ended the game
           gets their score doubled
-        
+
         Returns:
             dict[int, int]: A dictionary mapping player indices to their final scores
         """
         if not self.done:
             raise ValueError("Cannot calculate final scores before the game is done")
-            
+
         # Calculate raw scores (sum of remaining cards)
         final_scores = {}
         for i, player in enumerate(self.players):
             score = sum(card for card in player["grid"] if card is not None)
             final_scores[i] = score
-            
+
         # Find the lowest score
         lowest_score = min(final_scores.values())
-        
+
         # Apply penalty to the player who ended the game if they don't have the lowest score
         if self.final_player is not None:
             if final_scores[self.final_player] > lowest_score:
@@ -288,8 +318,8 @@ class SkyjoEnv:
                 for player_id, score in final_scores.items():
                     if score == lowest_score and player_id != self.final_player:
                         final_scores[self.final_player] *= 2
-            
+
         else:
             raise ValueError("No final player found. The game is not done.")
-                    
+
         return final_scores
